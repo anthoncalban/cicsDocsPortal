@@ -6,7 +6,7 @@ The **CICS Documents Portal** is a secure document management system built for s
 ---
 
 ## 🌐 Live Deployment
-- **Live deployed link:** [CICS Documents Portal](https://cics-docs-portal.vercel.app/)
+- **Link:** [CICS Documents Portal](https://cics-docs-portal.vercel.app/)
 ---
 
 ## 📌 Features
