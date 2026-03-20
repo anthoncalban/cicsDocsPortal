@@ -8,14 +8,14 @@ import { format, subDays, subWeeks, subMonths, isWithinInterval, startOfDay, end
 import { collection, onSnapshot, query, orderBy, addDoc, deleteDoc, doc, updateDoc, setDoc } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../firebase';
 
-type Tab = 'documents' | 'students' | 'stats';
+type Tab = 'documents' | 'users' | 'stats';
 type StatsPeriod = 'daily' | 'weekly' | 'monthly' | 'custom';
 
 export function AdminDashboard() {
   const { profile, logout } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>('documents');
   const [documents, setDocuments] = useState<CicsDocument[]>([]);
-  const [students, setStudents] = useState<UserProfile[]>([]);
+  const [users, setUsers] = useState<UserProfile[]>([]);
   const [loginLogs, setLoginLogs] = useState<LoginLog[]>([]);
   const [downloadLogs, setDownloadLogs] = useState<DownloadLog[]>([]);
   const [loading, setLoading] = useState(true);
@@ -42,10 +42,10 @@ export function AdminDashboard() {
       (error) => handleFirestoreError(error, OperationType.LIST, 'documents')
     );
 
-    const unsubStudents = onSnapshot(
+    const unsubUsers = onSnapshot(
       collection(db, 'users'),
       (snapshot) => {
-        setStudents(snapshot.docs.map(doc => doc.data() as UserProfile));
+        setUsers(snapshot.docs.map(doc => doc.data() as UserProfile));
       },
       (error) => handleFirestoreError(error, OperationType.LIST, 'users')
     );
@@ -72,7 +72,7 @@ export function AdminDashboard() {
 
     return () => {
       unsubDocs();
-      unsubStudents();
+      unsubUsers();
       unsubLoginLogs();
       unsubDownloadLogs();
     };
@@ -123,28 +123,28 @@ export function AdminDashboard() {
     reader.readAsDataURL(selectedFile);
   };
 
-  const toggleBlockStatus = async (student: UserProfile) => {
+  const toggleBlockStatus = async (user: UserProfile) => {
     try {
-      const userRef = doc(db, 'users', student.uid);
-      await updateDoc(userRef, { isBlocked: !student.isBlocked });
+      const userRef = doc(db, 'users', user.uid);
+      await updateDoc(userRef, { isBlocked: !user.isBlocked });
     } catch (error) {
-      handleFirestoreError(error, OperationType.UPDATE, `users/${student.uid}`);
+      handleFirestoreError(error, OperationType.UPDATE, `users/${user.uid}`);
     }
   };
 
-  const toggleAdminRole = async (student: UserProfile) => {
-    const newRole = student.role === 'admin' ? 'student' : 'admin';
+  const toggleAdminRole = async (user: UserProfile) => {
+    const newRole = user.role === 'admin' ? 'student' : 'admin';
     const confirmMsg = newRole === 'admin' 
-      ? `Are you sure you want to promote ${student.email} to Admin? They will have full access to the management console.`
-      : `Are you sure you want to demote ${student.email} to Student?`;
+      ? `Are you sure you want to promote ${user.email} to Admin? They will have full access to the management console.`
+      : `Are you sure you want to demote ${user.email} to User?`;
 
     if (!confirm(confirmMsg)) return;
 
     try {
-      const userRef = doc(db, 'users', student.uid);
+      const userRef = doc(db, 'users', user.uid);
       await updateDoc(userRef, { role: newRole });
     } catch (error) {
-      handleFirestoreError(error, OperationType.UPDATE, `users/${student.uid}`);
+      handleFirestoreError(error, OperationType.UPDATE, `users/${user.uid}`);
     }
   };
 
@@ -217,7 +217,7 @@ export function AdminDashboard() {
             </div>
             <div className="flex items-center gap-6">
               <div className="hidden md:flex gap-1">
-                {(['documents', 'students', 'stats'] as Tab[]).map(tab => (
+                {(['documents', 'users', 'stats'] as Tab[]).map(tab => (
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
@@ -225,7 +225,7 @@ export function AdminDashboard() {
                       activeTab === tab ? 'bg-stone-900 text-white' : 'text-stone-500 hover:bg-stone-100'
                     }`}
                   >
-                    {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                    {tab === 'users' ? 'Users Log In' : tab.charAt(0).toUpperCase() + tab.slice(1)}
                   </button>
                 ))}
               </div>
@@ -277,14 +277,14 @@ export function AdminDashboard() {
           </motion.div>
         )}
 
-        {activeTab === 'students' && (
+        {activeTab === 'users' && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-            <h2 className="text-3xl font-display font-bold text-stone-900 tracking-tight mb-8">Student Management</h2>
+            <h2 className="text-3xl font-display font-bold text-stone-900 tracking-tight mb-8">Users Log In Management</h2>
             <div className="bg-white rounded-3xl border border-stone-200 shadow-sm overflow-hidden">
               <table className="w-full text-left">
                 <thead>
                   <tr className="bg-stone-50 border-b border-stone-200">
-                    <th className="px-6 py-4 text-xs font-bold text-stone-500 uppercase tracking-wider">Student</th>
+                    <th className="px-6 py-4 text-xs font-bold text-stone-500 uppercase tracking-wider">User</th>
                     <th className="px-6 py-4 text-xs font-bold text-stone-500 uppercase tracking-wider">Program</th>
                     <th className="px-6 py-4 text-xs font-bold text-stone-500 uppercase tracking-wider">Last Login</th>
                     <th className="px-6 py-4 text-xs font-bold text-stone-500 uppercase tracking-wider">Role</th>
@@ -293,52 +293,52 @@ export function AdminDashboard() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-stone-100">
-                  {students.map(student => (
-                    <tr key={student.uid} className="hover:bg-stone-50/50 transition-colors">
+                  {users.map(user => (
+                    <tr key={user.uid} className="hover:bg-stone-50/50 transition-colors">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 bg-stone-100 rounded-xl flex items-center justify-center text-stone-600">
                             <User size={20} />
                           </div>
-                          <span className="font-semibold text-stone-900">{student.email}</span>
+                          <span className="font-semibold text-stone-900">{user.email}</span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-sm text-stone-600">{student.program || 'Not set'}</td>
+                      <td className="px-6 py-4 text-sm text-stone-600">{user.program || 'Not set'}</td>
                       <td className="px-6 py-4 text-sm text-stone-500">
-                        {student.lastLogin ? format(parseISO(student.lastLogin), 'MMM dd, HH:mm') : 'Never'}
+                        {user.lastLogin ? format(parseISO(user.lastLogin), 'MMM dd, HH:mm') : 'Never'}
                       </td>
                       <td className="px-6 py-4">
                         <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
-                          student.role === 'admin' ? 'bg-amber-100 text-amber-700' : 'bg-stone-100 text-stone-700'
+                          user.role === 'admin' ? 'bg-amber-100 text-amber-700' : 'bg-stone-100 text-stone-700'
                         }`}>
-                          {student.role}
+                          {user.role}
                         </span>
                       </td>
                       <td className="px-6 py-4">
                         <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
-                          student.isBlocked ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'
+                          user.isBlocked ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'
                         }`}>
-                          {student.isBlocked ? 'Blocked' : 'Active'}
+                          {user.isBlocked ? 'Blocked' : 'Active'}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right flex justify-end gap-2">
                         <button
-                          onClick={() => toggleAdminRole(student)}
+                          onClick={() => toggleAdminRole(user)}
                           className={`p-2 rounded-lg transition-colors ${
-                            student.role === 'admin' ? 'text-amber-600 hover:bg-amber-50' : 'text-stone-400 hover:bg-stone-100'
+                            user.role === 'admin' ? 'text-amber-600 hover:bg-amber-50' : 'text-stone-400 hover:bg-stone-100'
                           }`}
-                          title={student.role === 'admin' ? 'Demote to Student' : 'Promote to Admin'}
+                          title={user.role === 'admin' ? 'Demote to User' : 'Promote to Admin'}
                         >
                           <ShieldAlert size={20} />
                         </button>
                         <button
-                          onClick={() => toggleBlockStatus(student)}
+                          onClick={() => toggleBlockStatus(user)}
                           className={`p-2 rounded-lg transition-colors ${
-                            student.isBlocked ? 'text-emerald-600 hover:bg-emerald-50' : 'text-red-600 hover:bg-red-50'
+                            user.isBlocked ? 'text-emerald-600 hover:bg-emerald-50' : 'text-red-600 hover:bg-red-50'
                           }`}
-                          title={student.isBlocked ? 'Unblock Student' : 'Block Student'}
+                          title={user.isBlocked ? 'Unblock User' : 'Block User'}
                         >
-                          {student.isBlocked ? <UserCheck size={20} /> : <UserX size={20} />}
+                          {user.isBlocked ? <UserCheck size={20} /> : <UserX size={20} />}
                         </button>
                       </td>
                     </tr>
@@ -394,8 +394,8 @@ export function AdminDashboard() {
                     <Users size={24} />
                   </div>
                   <div>
-                    <p className="text-sm text-stone-500 font-medium">Total Students</p>
-                    <p className="text-3xl font-bold text-stone-900">{students.length}</p>
+                    <p className="text-sm text-stone-500 font-medium">Total Users</p>
+                    <p className="text-3xl font-bold text-stone-900">{users.length}</p>
                   </div>
                 </div>
               </div>
@@ -457,7 +457,7 @@ export function AdminDashboard() {
                 <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
                   {loginLogs.length > 0 ? (
                     loginLogs.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()).slice(0, 10).map(log => {
-                      const user = students.find(s => s.uid === log.userId);
+                      const user = users.find(s => s.uid === log.userId);
                       return (
                         <div key={log.id} className="flex items-center justify-between p-4 bg-stone-50 rounded-2xl border border-stone-100">
                           <div className="flex items-center gap-3">
@@ -466,7 +466,7 @@ export function AdminDashboard() {
                             </div>
                             <div>
                               <p className="text-sm font-bold text-stone-900">{user?.email || 'Unknown User'}</p>
-                              <p className="text-[10px] text-stone-400 font-bold uppercase tracking-wider">{user?.role || 'Student'}</p>
+                              <p className="text-[10px] text-stone-400 font-bold uppercase tracking-wider">{user?.role || 'User'}</p>
                             </div>
                           </div>
                           <span className="text-[10px] font-bold text-stone-500 uppercase tracking-widest">

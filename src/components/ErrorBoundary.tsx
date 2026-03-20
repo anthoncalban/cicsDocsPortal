@@ -1,4 +1,5 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import React from 'react';
+import { Component, ReactNode, ErrorInfo } from 'react';
 import { AlertCircle, RefreshCw, ShieldAlert, LogOut } from 'lucide-react';
 
 interface Props {
@@ -32,7 +33,7 @@ export class ErrorBoundary extends Component<Props, State> {
   public render() {
     if (this.state.hasError) {
       let isPermissionError = false;
-      let errorDetails = null;
+      let errorDetails: any = null;
 
       try {
         if (this.state.error?.message) {
