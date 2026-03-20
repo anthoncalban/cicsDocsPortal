@@ -1,0 +1,5 @@
+{
+  "name": "CICS Document Portal",
+  "description": "A secure document management system for CICS students and admins, featuring Google Auth restriction to neu.edu.ph, document search/download, and administrative monitoring.",
+  "requestFramePermissions": []
+}

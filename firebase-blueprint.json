@@ -1,0 +1,72 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Represents a user in the system (Admin or Student).",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Firebase Auth UID" },
+        "email": { "type": "string", "format": "email", "description": "Google email address" },
+        "role": { "type": "string", "enum": ["admin", "student"], "description": "User role" },
+        "program": { "type": "string", "description": "Undergraduate program (for students)" },
+        "isBlocked": { "type": "boolean", "description": "Whether the student is blocked" },
+        "lastLogin": { "type": "string", "format": "date-time", "description": "Last login timestamp" }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "Document": {
+      "title": "Document",
+      "description": "Represents a CICS PDF document.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "url": { "type": "string", "format": "uri" },
+        "uploadedBy": { "type": "string", "description": "UID of the admin who uploaded" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "downloadCount": { "type": "number" }
+      },
+      "required": ["title", "url", "uploadedBy", "createdAt"]
+    },
+    "DownloadLog": {
+      "title": "DownloadLog",
+      "description": "Log entry for when a student downloads a document.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "documentId": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "documentId", "timestamp"]
+    },
+    "LoginLog": {
+      "title": "LoginLog",
+      "description": "Log entry for when a user logs in.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles and settings."
+    },
+    "/documents/{docId}": {
+      "schema": "Document",
+      "description": "CICS PDF documents metadata."
+    },
+    "/downloadLogs/{logId}": {
+      "schema": "DownloadLog",
+      "description": "Tracking document downloads for stats."
+    },
+    "/loginLogs/{logId}": {
+      "schema": "LoginLog",
+      "description": "Tracking user logins for stats."
+    }
+  }
+}
