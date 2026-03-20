@@ -45,6 +45,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
           if (userDoc?.exists()) {
             const data = userDoc.data() as UserProfile;
+            
+            // Role Sync: Ensure default admins always have the admin role
+            const adminEmails = ['anthonvan.calban@neu.edu.ph', 'jcesperanza@neu.edu.ph'];
+            const shouldBeAdmin = currentUser.email ? adminEmails.includes(currentUser.email) : false;
+            
+            if (shouldBeAdmin && data.role !== 'admin') {
+              console.log('Promoting default admin:', currentUser.email);
+              await setDoc(userDocRef, { role: 'admin' }, { merge: true });
+              data.role = 'admin';
+            }
+
             setProfile(data);
             
             // Update last login

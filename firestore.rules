@@ -5,6 +5,18 @@ service cloud.firestore {
     // Allows any authenticated user from @neu.edu.ph to read and write to any collection.
     // Use this for debugging visibility issues.
     
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && 
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+         request.auth.token.email == "anthonvan.calban@neu.edu.ph" ||
+         request.auth.token.email == "jcesperanza@neu.edu.ph");
+    }
+
     match /{document=**} {
       allow read, write: if request.auth != null && 
                           request.auth.token.email.matches(".*@neu\\.edu\\.ph$");
